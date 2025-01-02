@@ -43,6 +43,11 @@ while [[ $# -gt 0 ]]; do
       shift # past argument
       shift # past value
       ;;
+    --section)
+      required_sections+=("$2")
+      shift # past argument
+      shift # past value
+      ;;
     -*|--*)
       echo "Unknown option $1"
       exit 1
@@ -68,20 +73,20 @@ github_query=$(cat "$script_dir/getDeliverableData.graphql")
 # Fetch GitHub data
 # #######################################################
 
-# Call the GitHub GraphQL API using the GitHub CLI with pagination,
-# then use jq to combine the project items from the paginated response,
-# and write the resulting values to a JSON file
+# # Call the GitHub GraphQL API using the GitHub CLI with pagination,
+# # then use jq to combine the project items from the paginated response,
+# # and write the resulting values to a JSON file
 
-gh api graphql \
- --header 'GraphQL-Features:issue_types' \
- --field login="${org}" \
- --field project="${project}" \
- --field quadField="Quad" \
- --field batch="${batch}" \
- --paginate \
- -f query="${github_query}" \
- --jq ".data.organization.projectV2.items.nodes" | \
- jq --slurp 'add' > $raw_data_file
+# gh api graphql \
+#  --header 'GraphQL-Features:issue_types' \
+#  --field login="${org}" \
+#  --field project="${project}" \
+#  --field quadField="Quad" \
+#  --field batch="${batch}" \
+#  --paginate \
+#  -f query="${github_query}" \
+#  --jq ".data.organization.projectV2.items.nodes" | \
+#  jq --slurp 'add' > $raw_data_file
 
 # #######################################################
 # Extract the relevant data from each deliverable
@@ -104,3 +109,9 @@ jq "[
   }
 
 ]" $raw_data_file > $parsed_data_file  # read from raw and write to parsed
+
+# #######################################################
+# Calculate and print metrics
+# #######################################################
+
+python3 "${script_dir}/calculate_metrics.py" "$parsed_data_file" --required-sections "${required_sections[@]}"
