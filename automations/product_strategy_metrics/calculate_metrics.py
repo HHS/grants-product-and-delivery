@@ -11,6 +11,15 @@ class SectionAnalysis:
     missing: list
 
 
+@dataclass
+class IssueRecord:
+    title: str = ""
+    participant_count: int = 0
+    body: str = ""
+    status: str = ""
+    url: str = ""
+
+
 def parse_sections(body: str) -> dict[str, str]:
     """Parse issue body into a dictionary that maps headings to sub-content."""
 
@@ -69,19 +78,17 @@ def main():
         data = json.load(file)
 
     # Process each record
-    for record in data:
-        title = record.get("title", "Untitled")
-        participant_count = record.get("participant_count", 0)
-        body = record.get("body", "")
-        url = record.get("url", "")
+    for item in data:
+        record = IssueRecord(**item)
 
-        sections = parse_sections(body)
+        sections = parse_sections(record.body)
         analysis = analyze_sections(sections, args.required_sections)
 
         # Output results
-        print(f"### {title}")
-        print(f"- URL: {url}")
-        print(f"- Participant count: {participant_count}")
+        print(f"### {record.title}")
+        print(f"- URL: {record.url}")
+        print(f"- Status: {record.status}")
+        print(f"- Participant count: {record.participant_count}")
         print(f"- Percent of template complete: {round(analysis.percent_filled)}%")
         print(f"- Filled sections: {analysis.filled}")
         print(f"- Incomplete sections: {analysis.missing}\n")

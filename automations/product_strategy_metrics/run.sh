@@ -105,7 +105,8 @@ jq "[
     title: .content.title,
     url: .content.url,
     participant_count: .content.participants.totalCount,
-    body: .content.body
+    body: .content.body,
+    status: .status.name
   }
 
 ]" $raw_data_file > $parsed_data_file  # read from raw and write to parsed
