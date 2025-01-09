@@ -77,16 +77,16 @@ github_query=$(cat "$script_dir/getDeliverableData.graphql")
 # # then use jq to combine the project items from the paginated response,
 # # and write the resulting values to a JSON file
 
-# gh api graphql \
-#  --header 'GraphQL-Features:issue_types' \
-#  --field login="${org}" \
-#  --field project="${project}" \
-#  --field quadField="Quad" \
-#  --field batch="${batch}" \
-#  --paginate \
-#  -f query="${github_query}" \
-#  --jq ".data.organization.projectV2.items.nodes" | \
-#  jq --slurp 'add' > $raw_data_file
+gh api graphql \
+ --header 'GraphQL-Features:issue_types' \
+ --field login="${org}" \
+ --field project="${project}" \
+ --field quadField="Quad" \
+ --field batch="${batch}" \
+ --paginate \
+ -f query="${github_query}" \
+ --jq ".data.organization.projectV2.items.nodes" | \
+ jq --slurp 'add' > $raw_data_file
 
 # #######################################################
 # Extract the relevant data from each deliverable
