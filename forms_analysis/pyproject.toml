@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "forms-analysis"
+version = "0.1.0"
+description = ""
+authors = ["widal001 <billy.daly@agile6.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pandas = "^2.2.3"
+requests = "^2.32.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
