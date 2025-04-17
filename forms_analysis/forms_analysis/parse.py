@@ -58,6 +58,20 @@ def process_element(
             column_info["type"] = parts[1]
         else:
             column_info["type"] = type_value
+    else:
+        # Check for simpleType with restriction
+        simple_type = element.find(f"./{XSD_NAMESPACE}simpleType")
+        if simple_type is not None:
+            restriction = simple_type.find(f"./{XSD_NAMESPACE}restriction")
+            if restriction is not None:
+                base_type = restriction.get("base", "")
+                if base_type:
+                    parts = base_type.split(":")
+                    if len(parts) == 2:
+                        column_info["type_source"] = parts[0]
+                        column_info["type"] = "restriction"
+                    else:
+                        column_info["type"] = "restriction"
 
     # Increment order counter
     order_counter += 1
@@ -77,6 +91,11 @@ def process_element(
         # Find direct child elements within the sequence
         sequence = complex_type.find(f"./{XSD_NAMESPACE}sequence")
         if sequence is not None:
+            # If this element has a complexType with a sequence containing elements,
+            # it's a section
+            if sequence.findall(f"./{XSD_NAMESPACE}element"):
+                column_info["type"] = "FieldSet"
+
             for child in sequence.findall(f"./{XSD_NAMESPACE}element"):
                 order_counter = process_element(
                     child, columns, order_counter, full_path, depth + 1
