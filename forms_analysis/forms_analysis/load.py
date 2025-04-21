@@ -2,7 +2,7 @@
 
 import logging
 from pathlib import Path
-
+from typing import Callable
 import pandas as pd
 
 
@@ -16,7 +16,9 @@ def standardize_col_names(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def add_form_metadata(
-    df: pd.DataFrame, metadata_path: str, link_column: str = "form_link"
+    df: pd.DataFrame,
+    metadata_path: str,
+    link_column: str,
 ) -> pd.DataFrame:
     """
     Add form metadata to the DataFrame.
@@ -43,10 +45,18 @@ def add_form_metadata(
     metadata_df = pd.read_csv(metadata_path)
     metadata_df = metadata_df[metadata_cols.keys()]
     metadata_df.rename(columns=metadata_cols, inplace=True)
+
+    # Drop duplicates based on the specific link column we're using
     metadata_df.drop_duplicates(subset=[link_column], inplace=True)
 
     # Merge metadata with data
-    merged_df = pd.merge(df, metadata_df, on=link_column, how="left")
+    merged_df = pd.merge(
+        df,
+        metadata_df,
+        left_on="form_link",
+        right_on=link_column,
+        how="left",
+    )
 
     return merged_df
 
@@ -56,7 +66,7 @@ def process_all_files(
     file_type: str,
     metadata_path: str,
     output_path: str,
-    process_func: callable,
+    process_func: Callable,
 ) -> None:
     """
     Process all files in a directory, enrich with metadata, and save the result.
@@ -94,7 +104,11 @@ def process_all_files(
     combined_df = pd.concat(dfs, ignore_index=True)
 
     # Enrich with metadata
-    combined_df = add_form_metadata(combined_df, metadata_path)
+    combined_df = add_form_metadata(
+        combined_df,
+        metadata_path,
+        link_column="form_schema_url",
+    )
 
     # Save to CSV
     combined_df.to_csv(output_path, index=False)
