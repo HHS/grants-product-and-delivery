@@ -2,19 +2,24 @@ import pandas as pd
 import requests
 import os
 from urllib.parse import urlparse
-from typing import List
+from typing import List, Optional
 
 
-def download_xml_schema(url: str, output_dir: str) -> str:
+def download_file(
+    url: str,
+    output_dir: str,
+    file_extension: Optional[str] = None,
+) -> Optional[str]:
     """
-    Download an XML schema from a URL and save it to the specified directory.
+    Download a file from a URL and save it to the specified directory.
 
     Args:
-        url (str): URL of the XML schema
-        output_dir (str): Directory to save the XML file
+        url (str): URL of the file to download
+        output_dir (str): Directory to save the file
+        file_extension (Optional[str]): Optional file extension to ensure the file has
 
     Returns:
-        str: Path to the downloaded file
+        Optional[str]: Path to the downloaded file, or None if download failed
     """
     try:
         # Create output directory if it doesn't exist
@@ -24,9 +29,9 @@ def download_xml_schema(url: str, output_dir: str) -> str:
         parsed_url = urlparse(url)
         filename = os.path.basename(parsed_url.path)
 
-        # Ensure filename ends with .xml
-        if not filename.endswith(".xml"):
-            filename += ".xml"
+        # Add file extension if specified and not already present
+        if file_extension and not filename.endswith(file_extension):
+            filename += file_extension
 
         # Full path to save file
         output_path = os.path.join(output_dir, filename)
@@ -46,13 +51,20 @@ def download_xml_schema(url: str, output_dir: str) -> str:
         return None
 
 
-def download_all_schemas(metadata_path: str, output_dir: str) -> List[str]:
+def download_files_from_metadata(
+    metadata_path: str,
+    column_name: str,
+    output_dir: str,
+    file_extension: Optional[str] = None,
+) -> List[str]:
     """
-    Download all XML schemas from the FormSchema column in FormMetadata.csv.
+    Download files from URLs specified in a column of the metadata CSV.
 
     Args:
-        metadata_path (str): Path to FormMetadata.csv
-        output_dir (str): Directory to save XML files
+        metadata_path (str): Path to the metadata CSV file
+        column_name (str): Name of the column containing URLs
+        output_dir (str): Directory to save downloaded files
+        file_extension (Optional[str]): Optional file extension to ensure files have
 
     Returns:
         List[str]: List of paths to downloaded files
@@ -60,19 +72,31 @@ def download_all_schemas(metadata_path: str, output_dir: str) -> List[str]:
     # Read the metadata file
     df = pd.read_csv(metadata_path)
 
-    # Get unique schema URLs
-    schema_urls = df["Form Schema"].dropna().unique()
+    # Get unique URLs from the specified column
+    urls = df[column_name].dropna().unique()
 
-    # Download each schema
+    # Download each file
     downloaded_files = []
-    for url in schema_urls:
-        file_path = download_xml_schema(url, output_dir)
+    for url in urls:
+        file_path = download_file(url, output_dir, file_extension)
         if file_path:
             downloaded_files.append(file_path)
-            print(f"Downloaded: {file_path}")
+            print(f"Downloaded {column_name}: {file_path}")
 
     return downloaded_files
 
 
 if __name__ == "__main__":
-    download_all_schemas("./FormMetadata.csv", "./tmp/schemas")
+
+    # Or download specific types of files:
+    # download_files_from_metadata(
+    #     metadata_path="./FormMetadata.csv",
+    #     column_name="Form Schema",
+    #     output_dir="./tmp/schemas",
+    #     file_extension=".xml",
+    # )
+    download_files_from_metadata(
+        metadata_path="./FormMetadata.csv",
+        column_name="Form DAT",
+        output_dir="./tmp/dat",
+    )
