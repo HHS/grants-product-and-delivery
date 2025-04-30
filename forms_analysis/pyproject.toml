@@ -9,6 +9,7 @@ readme = "README.md"
 python = "^3.11"
 pandas = "^2.2.3"
 requests = "^2.32.3"
+xlrd = "^2.0.1"
 
 
 [build-system]
